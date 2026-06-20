@@ -76,7 +76,8 @@ speculative-exact/
 │   ├── speculative_cached.py KV-cached linear codec (correct rollback) — real wallclock
 │   ├── train_save.py        train + save a ByteGPT on any file (for real-ratio demos)
 │   ├── theory.py            verifies avg_run == 1/(1 - top-w accuracy) on real data
-│   └── kv_cache_test.py     falsification: per-step cost is flat in draft width (batch-1)
+│   ├── kv_cache_test.py     falsification: per-step cost is flat in draft width (batch-1)
+│   └── tree_verify_cost.py  why linear, not trees: verify cost-flat to M=256 (tree-sized)
 ├── draft/
 │   ├── cm.c                 the cheap draft: a compact context-mixing compressor (C)
 │   ├── Makefile             cc -O3 -o cm cm.c -lm
@@ -148,12 +149,33 @@ The decoupling is visible in the table: **samba compresses *worse* than dickens 
 1.95 bpb) yet decodes *faster* (3.30 > 2.52×)** — speed tracks guessability, not size. The
 law `avg_run = 1/(1−p_w)` matches measurement to four decimals (`src/theory.py`).
 
-**Trained end-to-end (nci chemistry database, KV-cached codec):** bit-exact round-trip,
-**real ratio 0.344 bpb**, and a **~8× wallclock decode speedup** simultaneously (k=32:
-7.97× wallclock / 9.47× forward-count). Linear drafting realizes ~the forward-count
-reduction; tree drafting would push toward the top-w ceiling but is **not realized here**
-(bounded-node trees depth-truncate and underperform linear on high-guessability data — see
-THEORY.md).
+### Trained end-to-end (real ratio × real speedup, both ends of the range)
+
+Two trained-model proofs, both **bit-exact round-trip**, spanning the guessability range:
+
+| corpus | type | real ratio | linear decode speedup | round-trip |
+|---|---|---|---|---|
+| **nci** (chemistry database) | structured | **0.344 bpb** | **~8× wallclock / 9.47× forward** (k=32) | bit-exact |
+| **enwik8** (Wikipedia) | text | **1.906 bpb** (beats `cm` 1.914 / xz 1.987 / zstd-19 2.155) | **3.71× wallclock / 4.51× forward** (proof window) | bit-exact |
+
+**The speedup is empirically the top-1 ceiling `1/(1−p1)`, realized by the *linear* codec.**
+Sweeping the draft window `k` shows the forward-count reduction *saturating* at that ceiling:
+
+| draft window k | 8 | 16 | 32 | 64 | 96 |
+|---|---|---|---|---|---|
+| nci forward-reduction (p1=0.907) | 5.33× | 7.76× | 9.48× | 10.67× | **10.67×** → `1/(1−0.907)=10.75×` |
+| enwik8 window (p1=0.777) | 3.63× | 4.23× | 4.49× | **4.51×** → `1/(1−0.777)=4.48×` | — |
+
+The enwik8 proof window is locally more guessable (p1=0.777) than the global corpus
+(p1=0.642 → the representative text figure **2.80×**); both obey `1/(1−p1)`. Linear
+saturates at the ceiling, so **a tree draft has nothing left to add** on these data — and on
+high-guessability data a bounded-node tree *underperforms* linear (it depth-truncates the
+long runs; nci linear **11.97×** vs best bounded-node tree **6.65×**, see THEORY.md). The
+realized codec is therefore linear; tree numbers are kept only as non-realizable upper bounds.
+
+Reproduce the saturation: `src/train_save.py` then `src/speculative_cached.py --k {8,16,32,64}`.
+The "verify stays ~free to tree-sized batches" claim behind this is measured directly by
+`src/tree_verify_cost.py` (cost-flat to M=256 nodes for a small model).
 
 ## Caveats
 

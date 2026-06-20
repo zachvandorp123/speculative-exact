@@ -79,6 +79,12 @@ memory/launch-bound — verification is nearly free; see `src/kv_cache_test.py`)
 
 The tree-`w` numbers in some tables are kept only as **non-realizable upper bounds**.
 
+Evidence: `src/tree_verify_cost.py` measures the verify forward staying cost-flat to **M=256**
+nodes for a small model (so a tree *could* be cheap), and the `--k` sweep in
+`src/speculative_cached.py` shows linear *already* saturating at `1/(1−p1)` (nci 10.67× at
+k≥64) — leaving the tree nothing to add. The depth-cap that sinks the tree comes from
+`w^d ≤` (that flat node budget) truncating exactly the long runs.
+
 ## Levers (all keep the exact ratio)
 
 1. **Better draft → higher p1.** An EAGLE-style self-draft (reuses the target's own hidden
