@@ -1,0 +1,6 @@
+# Speculative-EXACT compression — Python dependencies.
+# Pinned to the versions the results were produced with; newer minor versions
+# are likely fine. A CUDA-enabled torch is optional (CPU works; GPU is faster).
+torch==2.12.1
+numpy==2.4.6
+constriction==0.4.2

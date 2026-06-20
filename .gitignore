@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Trained models, holdout slices, draft/rank byte streams (regenerate from scripts)
+*.pt
+*.npy
+*.npz
+*.bin
+
+# Corpora (download separately — see README)
+corpora/
+*.enwik8
+enwik8
+enwik9
+
+# Compiled C draft
+draft/cm
+*.o
+
+# OS / editor
+.DS_Store
+*.swp

@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this software or its ideas, please cite it as below."
+title: "Speculative-EXACT: speculative decoding for exact lossless neural compression"
+abstract: >-
+  A port of speculative decoding to the decode loop of an exact lossless neural
+  compressor. A cheap draft model proposes the next bytes; the expensive
+  autoregressive model verifies them in one batched forward; the entropy coder
+  always codes against the expensive model's exact CDF, so the result is bit-exact
+  regardless of draft quality. The decode speedup equals 1/(1 - p), where p is the
+  draft's top-1 accuracy on the data — so decode SPEED is governed by the data's
+  guessability (a min-entropy quantity) while output SIZE is governed by Shannon
+  entropy. Speedups range from ~1.5x on high-entropy data to ~11x on structured
+  data, at zero ratio loss.
+type: software
+authors:
+  - given-names: Zach
+    family-names: van Dorp
+    email: zachvandorp@gmail.com
+keywords:
+  - lossless compression
+  - speculative decoding
+  - neural compression
+  - entropy coding
+  - arithmetic coding
+license: MIT
+version: "1.0.0"
+date-released: "2026-06-20"
